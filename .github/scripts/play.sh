@@ -16,6 +16,11 @@ echo "== waiting for the device to settle =="
 adb wait-for-device
 adb shell input keyevent 82 >/dev/null 2>&1 || true
 
+# Suppress Android's one-time "Viewing full screen" overlay. It covers the top
+# of every screenshot, and on a loaded emulator its window ANRs waiting for a
+# focus event, which looks alarming and has nothing to do with the game.
+adb shell settings put secure immersive_mode_confirmations confirmed
+
 echo "== installing =="
 adb install -r -t app/build/outputs/apk/debug/app-debug.apk
 
@@ -28,10 +33,6 @@ echo "== screen ${W}x${H} =="
 adb logcat -c
 adb shell am start -W -n "$PKG/.MainActivity"
 sleep 6
-# dismiss Android's one-time "Viewing full screen" notice so it stops
-# covering the top of every screenshot
-adb shell input tap $((W * 4 / 5)) $((H / 4))
-sleep 2
 shot 01-title
 
 echo "== playing ($STYLE) =="
