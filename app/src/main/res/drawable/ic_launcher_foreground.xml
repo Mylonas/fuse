@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- the fused orb -->
+    <path
+        android:pathData="M54,66 A22,22 0 1,1 53.9,66 Z"
+        android:fillColor="#FFD84D" />
+
+    <!-- the two that made it, dropping in -->
+    <path
+        android:pathData="M38,30 A11,11 0 1,1 37.9,30 Z"
+        android:fillColor="#6EE7FF" />
+    <path
+        android:pathData="M70,30 A11,11 0 1,1 69.9,30 Z"
+        android:fillColor="#7CF6C0" />
+</vector>
