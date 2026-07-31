@@ -41,6 +41,15 @@ object Tune {
     const val SURGE_EVERY = 18     // merges per surge
     const val SURGE_KICK = 190f    // px/s
     const val MAX_BALLS = 140
+
+    /**
+     * The aspect ratio every constant here was tuned against (a well 1.35x as
+     * tall as it is wide). A phone well is much taller than that, so orbs are
+     * scaled up to keep the number needed to fill the well the same — without
+     * this, the balance measured in the simulator simply does not reach the
+     * device, and the game plays far too loose.
+     */
+    const val REF_ASPECT = 1.35f
 }
 
 class Ball(
@@ -109,8 +118,12 @@ class Well(@JvmField val w: Float, @JvmField val h: Float, seed: Long = 1L) {
         nextTier = (rnd() * Tune.SPAWN_TIERS).toInt().coerceIn(0, Tune.SPAWN_TIERS - 1)
     }
 
+    /** Keeps "how many orbs fill this well" constant across screen shapes. */
+    @JvmField
+    val sizeScale: Float = sqrt(h / (Tune.REF_ASPECT * w)).coerceIn(0.8f, 1.6f)
+
     fun radius(tier: Int): Float {
-        var r = Tune.R0 * w
+        var r = Tune.R0 * w * sizeScale
         repeat(tier) { r *= Tune.GROW }
         return r
     }

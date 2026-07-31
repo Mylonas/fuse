@@ -97,6 +97,24 @@ class WellTest {
     // ------------------------------------------------------------- physics
 
     @Test
+    fun aTallPhoneWellNeedsTheSameNumberOfOrbsToFillIt() {
+        // The constants were tuned at 1.35:1. A 20:9 phone well is far taller,
+        // and without scaling the orbs it takes ~40% more of them to fill —
+        // which is a completely different, much slacker game.
+        fun capacity(well: Well): Float {
+            val r = well.radius(0)
+            return (well.w * well.h) / (r * r)
+        }
+        val tuned = Well(1080f, 1080f * Tune.REF_ASPECT)
+        val phone = Well(1080f, 2076f)          // what a 1080x2400 device gives
+        val ratio = capacity(phone) / capacity(tuned)
+        assertTrue(
+            "a phone well holds ${ratio}x the tuned capacity",
+            ratio > 0.85f && ratio < 1.15f
+        )
+    }
+
+    @Test
     fun nothingEscapesTheWellUnderAHeavyFill() {
         for (seed in seeds) {
             val w = well(seed)

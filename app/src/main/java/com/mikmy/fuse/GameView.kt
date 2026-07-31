@@ -12,6 +12,7 @@ import android.view.SurfaceView
  * loop. Touch events arrive on the UI thread, so every mutation of [Game] is
  * guarded by a single lock shared with the render thread.
  */
+@SuppressLint("ViewConstructor")
 class GameView(
     context: Context,
     baseline: Boolean = false
