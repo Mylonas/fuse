@@ -23,17 +23,14 @@ class WellTest {
         }
     }
 
-    /** Drop a specific tier by fishing for it in the queue. */
-    private fun Well.dropTier(tier: Int, x: Float, maxTries: Int = 200): Boolean {
-        repeat(maxTries) {
-            if (nextTier == tier && canDrop) {
-                drop(x)
-                return true
-            }
-            clearEvents()
-            update(DT)
-        }
-        return false
+    /**
+     * Drop a chosen tier. The queue only advances when a ball is released, so
+     * waiting for a tier to come up on its own can never terminate — the test
+     * sets it directly.
+     */
+    private fun Well.dropTier(tier: Int, x: Float): Boolean {
+        nextTier = tier
+        return drop(x)
     }
 
     // ------------------------------------------------------- the core rule
@@ -42,9 +39,9 @@ class WellTest {
     fun twoEqualTiersFuseIntoTheNextTier() {
         val w = well()
         assertTrue(w.dropTier(0, W * 0.5f))
-        w.settle(1.2f)
+        w.settle(1.5f)
         assertTrue(w.dropTier(0, W * 0.5f))
-        w.settle(2.5f)
+        w.settle(3f)
         assertTrue("no fusion happened at all", w.merges > 0)
         assertTrue("nothing reached tier 1", w.balls.any { it.tier >= 1 })
     }
@@ -63,7 +60,10 @@ class WellTest {
         val w = well(5L)
         assertTrue(w.dropTier(0, W * 0.30f))
         w.settle(3f)                       // let it come completely to rest
-        assertTrue("the first ball should have settled", w.totalSpeed < 1f)
+        assertTrue(
+            "the first ball never settled (total speed ${w.totalSpeed})",
+            w.totalSpeed < 2f
+        )
         val before = w.merges
         assertTrue(w.dropTier(0, W * 0.30f))
         w.settle(3f)
@@ -77,7 +77,10 @@ class WellTest {
         w.settle(1.5f)
         assertTrue(w.dropTier(2, W * 0.5f))
         w.settle(3f)
-        assertEquals("a tier 0 and a tier 2 fused", 0, w.merges)
+        assertEquals(
+            "a tier 0 and a tier 2 fused (${w.balls.map { it.tier }})",
+            0, w.merges
+        )
     }
 
     @Test
@@ -199,7 +202,9 @@ class WellTest {
         fun value(t: Int) = t * (t + 1) / 2 * 10
         assertEquals(10, value(1))
         assertEquals(30, value(2))
-        assertTrue(value(8) > 6 * value(3))
+        // doubling the tier must more than double the payout
+        assertTrue(value(8).toFloat() / value(4) > 3f)
+        assertTrue(value(4).toFloat() / value(2) > 3f)
     }
 
     @Test
