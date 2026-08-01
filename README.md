@@ -68,6 +68,49 @@ After tuning, over 8 seeds with a sensible player model: every run ends, between
 47 and 174 drops, reaching tier 7–9, and the pile settles to 0 px/s with nothing
 escaping.
 
+## Review pass: what the rig says about the finished game
+
+The same bot rig that shaped the physics was later turned on the design, asking
+the three questions that found real defects in the other two games.
+
+**Is SURGE actually a reward, or does it kill you?** It jolts the pile upward and
+the loss condition is a ball sitting above the line, so this was the obvious
+suspect. Same seeds, surge on versus off:
+
+| | avg drops | avg score | avg biggest tier |
+| --- | --- | --- | --- |
+| surge every 18 fusions | 94 | 11,842 | 7.8 |
+| surge disabled | 83.5 | 9,243 | 7.4 |
+
+Runs are *longer* with it and score 28% higher. 30% of deaths land within 2s of a
+surge, but a surge fires roughly every 9s, so ~22% would happen by chance alone —
+it carries a little risk on top of a clear net benefit, which is what it was for.
+
+**Does placement actually matter?** The first attempt said no: a bot aiming at
+the lowest exposed matching ball scored about the same as one dropping at random.
+That turned out to be the same trap Tether fell into — the bot was simply a bad
+player. A planner that simulates each candidate column and keeps the one that
+scores best while leaving the pile lowest:
+
+| player | median drops | score |
+| --- | --- | --- |
+| simulates each drop | 147 | 23,027 |
+| aims at a match, ignoring pile height | 76 | 12,155 |
+| drops at random | 100 | 11,068 |
+| always the middle column | 16 | 283 |
+
+Real planning is 2.1× the score of random, and the degenerate strategy dies in 16
+drops. Note that greedily chasing matches while letting the pile climb is *worse
+than random* — the game's lesson is "chase fusions, but don't build towers", and
+unlike a hidden coin flip it is a lesson you can see yourself learning.
+
+**Are deaths telegraphed?** Over 30 runs, the pile was already above the line at
+the moment of the fatal drop **every single time** — median 8.5 of the smallest
+ball's radii above it. Zero runs ended from a board that still looked safe. The
+near-miss grace period is doing its job.
+
+No balance changes came out of this pass.
+
 ## Tests
 
 `app/src/test` runs the real simulation on the JVM:
