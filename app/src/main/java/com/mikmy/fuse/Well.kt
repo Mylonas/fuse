@@ -128,14 +128,6 @@ class Well(@JvmField val w: Float, @JvmField val h: Float, seed: Long = 1L) {
         return r
     }
 
-    /** How close the pile is to the line, 0..1, for the HUD. */
-    val pressure: Float
-        get() {
-            var top = h
-            for (b in balls) if (b.y - b.r < top) top = b.y - b.r
-            return ((h * 0.55f - top) / (h * 0.55f - dangerY)).coerceIn(0f, 1f)
-        }
-
     val canDrop: Boolean get() = !over && cooldown <= 0f && balls.size < Tune.MAX_BALLS
 
     fun clearEvents() {
