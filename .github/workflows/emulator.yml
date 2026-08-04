@@ -40,7 +40,13 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
-          target: google_apis
+          # The lean AOSP image on purpose. It has no Play Services, so this
+          # run also proves the game degrades gracefully where the ads SDK
+          # cannot work at all. A one-off google_apis run confirmed the SDK
+          # initialises and preloads; that image is too overloaded for routine
+          # CI - Play Services itself ANRs there and takes dependent processes
+          # down with it.
+          target: default
           arch: x86_64
           profile: pixel_6
           ram-size: 4096M
