@@ -15,6 +15,15 @@ val keystoreProps = Properties().apply {
 }
 val hasReleaseKeystore = keystorePropsFile.exists()
 
+// Real ad unit IDs never live in git. Put them in your USER-level
+// ~/.gradle/gradle.properties, or pass -PADMOB_APP_ID=... on the command line,
+// or set them as CI secrets. Without them the build uses Google's official TEST
+// ids, which are safe to run anywhere and are what debug builds always get.
+val testAdmobAppId = "ca-app-pub-3940256099942544~3347511713"
+val testInterstitialId = "ca-app-pub-3940256099942544/1033173712"
+val admobAppId = (project.findProperty("ADMOB_APP_ID") as String?) ?: testAdmobAppId
+val interstitialId = (project.findProperty("ADMOB_INTERSTITIAL_ID") as String?) ?: testInterstitialId
+
 android {
     namespace = "com.mikmy.fuse"
     compileSdk = 35
@@ -26,6 +35,10 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         resourceConfigurations += setOf("en")
+
+        manifestPlaceholders["admobAppId"] = admobAppId
+        buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
+        buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"$interstitialId\"")
     }
 
     signingConfigs {
@@ -55,6 +68,11 @@ android {
         }
         debug {
             isMinifyEnabled = false
+            // Serving yourself live ads gets AdMob accounts suspended, so a
+            // debug build can only ever show test ads.
+            manifestPlaceholders["admobAppId"] = testAdmobAppId
+            buildConfigField("String", "ADMOB_APP_ID", "\"$testAdmobAppId\"")
+            buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"$testInterstitialId\"")
         }
     }
 
@@ -80,6 +98,11 @@ android {
 }
 
 dependencies {
-    // Test-only. The shipped APK carries no third-party code at all.
+    // AdMob. The GMA Next-Gen SDK — Google put the classic play-services-ads
+    // into maintenance mode in January 2026 and recommends this for new apps.
+    implementation("com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.3.1")
+    // Consent for EEA/UK users. Required by Google's EU user consent policy.
+    implementation("com.google.android.ump:user-messaging-platform:4.0.0")
+
     testImplementation("junit:junit:4.13.2")
 }
