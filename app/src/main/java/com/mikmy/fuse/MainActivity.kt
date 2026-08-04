@@ -10,6 +10,7 @@ import android.view.WindowManager
 class MainActivity : Activity() {
 
     private lateinit var view: GameView
+    private lateinit var ads: Ads
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,6 +18,9 @@ class MainActivity : Activity() {
         // Debug-only: "--ez baseline true" runs the same loop drawing only the
         // background, which is how the render cost gets attributed.
         view = GameView(this, intent?.getBooleanExtra("baseline", false) == true)
+        ads = Ads(this)
+        ads.start()
+        view.setOnRunEnded { ads.onRunEnded() }
         setContentView(view)
         goFullscreen()
     }
