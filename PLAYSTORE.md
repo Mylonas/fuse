@@ -71,69 +71,87 @@ sideloading, **rejected by Play**.
 
 ### Option B: sign in CI, no local toolchain
 
-You have `openssl` (it ships with Git for Windows) but no JDK, so this path
-makes the keystore with openssl and lets GitHub Actions do the signing.
+You have `openssl` (it ships with Git for Windows) but no JDK, so this path makes
+the keystore with openssl and lets GitHub Actions do the signing.
 
-**1. Create the upload key.** Run this yourself and pick your own password when
-prompted — it must never be shared, pasted into a chat, or committed:
+**1. Create the upload key.** In **Git Bash**, from the repo folder:
 
 ```bash
-openssl req -x509 -newkey rsa:2048 -sha256 -days 10000 -keyout upload.key -out upload.crt -subj "/CN=Mylonas/O=Mylonas/C=CY"
+bash store/make-upload-key.sh
+```
+
+It asks you to choose a password, twice. Type it straight into openssl — the
+script never stores it, never takes it as an argument (which would put it in your
+shell history), and never prints it. Output lands in `~/play-upload-key/`.
+
+If you would rather run the commands yourself, they are:
+
+```bash
+MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:2048 -sha256 -days 10000 -noenc -keyout tmp.key -out tmp.crt -subj "/CN=Mylonas/O=Mylonas/C=CY"
 ```
 
 ```bash
-openssl pkcs12 -export -inkey upload.key -in upload.crt -name upload -out upload-keystore.p12
+openssl pkcs12 -export -inkey tmp.key -in tmp.crt -name upload -out upload-keystore.p12
 ```
-
-The first command asks you to invent a PEM passphrase; the second asks for an
-export password. **Use the same password for both** and store it in your
-password manager. Then delete `upload.key` and `upload.crt` — the `.p12` is the
-only file you need.
-
-> Back `upload-keystore.p12` up somewhere that is not this laptop. Lose it and
-> you cannot ship updates to the same Play listing. (An *upload* key can be
-> reset by Google if it comes to that, unlike the app signing key — but resetting
-> is a support round-trip you do not want.)
-
-**2. Turn it into base64:**
 
 ```bash
-base64 -w 0 upload-keystore.p12 > upload-keystore.b64
+rm -f tmp.key tmp.crt && base64 -w 0 upload-keystore.p12 > upload-keystore.b64
 ```
 
-**3. Add six repository secrets** — GitHub → your repo → **Settings → Secrets
-and variables → Actions → New repository secret**:
+> `MSYS_NO_PATHCONV=1` is not optional on Windows. Without it Git Bash rewrites
+> the `"/CN=..."` subject into a filesystem path and openssl fails with
+> *"subject name is expected to be in the format /type0=value0..."*.
+
+> **Back `upload-keystore.p12` up somewhere that is not this laptop.** Lose it and
+> you cannot ship updates to the same Play listing. (An *upload* key can be reset
+> by Google if it comes to that, unlike the app signing key — but that is a
+> support round-trip you do not want.)
+
+Check what you made — it will ask for the password:
+
+```bash
+openssl pkcs12 -in ~/play-upload-key/upload-keystore.p12 -nokeys -info
+```
+
+You should see `friendlyName: upload` and `subject=CN=Mylonas, O=Mylonas, C=CY`.
+
+**2. Add six repository secrets** — GitHub → this repo → **Settings → Secrets and
+variables → Actions → New repository secret**:
 
 | Secret | Value |
 | --- | --- |
-| `KEYSTORE_BASE64` | the entire contents of `upload-keystore.b64` |
+| `KEYSTORE_BASE64` | the entire contents of `upload-keystore.b64` (one long line) |
 | `KEYSTORE_PASSWORD` | the password you chose |
 | `KEY_ALIAS` | `upload` |
 | `KEY_PASSWORD` | the same password |
 | `ADMOB_APP_ID` | `ca-app-pub-XXXX~YYYY` |
 | `ADMOB_INTERSTITIAL_ID` | `ca-app-pub-XXXX/ZZZZ` |
 
-Paste them into GitHub yourself. I never see them, and GitHub masks secret
-values in workflow logs.
+To get the base64 onto your clipboard without opening it:
 
-**4. Run the workflow.** Actions → **Signed release bundle** → *Run workflow*,
-and give it a `versionCode` higher than anything you have uploaded before
-(start at `2`) and a `versionName` like `1.1`.
+```bash
+clip < ~/play-upload-key/upload-keystore.b64
+```
 
-It refuses to produce anything unusable: the build fails if a signing key is
-missing, if the AdMob ids are still the test ones, and it runs `apksigner` at
+Paste them into GitHub yourself. They are never visible to anyone else, and
+GitHub masks secret values in workflow logs.
+
+**3. Run the workflow.** Actions → **Signed release bundle** → *Run workflow*,
+with a `versionCode` higher than anything already uploaded (start at `2`) and a
+`versionName` like `1.1`.
+
+It refuses to produce anything unusable: the build fails if the signing key is
+missing, fails if the AdMob ids are still the test ones, and runs `apksigner` at
 the end to prove the output is not debug-signed. Download the artifact — the
-`.aab` inside is what you upload to Play.
-
-Keep `mapping.txt` from the same artifact. Upload it alongside the bundle so
-Play can deobfuscate crash reports.
+`.aab` inside is what you upload to Play. Keep `mapping.txt` from the same
+artifact and upload it too, so Play can deobfuscate crash reports.
 
 ### Which option to pick
 
-Option A if you are going to install Android Studio anyway — you will want it
-for screenshots and for testing on a device. Option B if you would rather not
-install a toolchain: it puts your upload key in GitHub's encrypted secret store,
-which is normal practice for CI signing, but it is your key and your call.
+Option A if you are going to install Android Studio anyway — you will want it for
+screenshots and on-device testing. Option B if you would rather not install a
+toolchain: it puts your upload key in GitHub's encrypted secret store, which is
+standard practice for CI signing, but it is your key and your call.
 
 ## 3. Build the AAB
 
