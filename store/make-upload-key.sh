@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 #
-# Creates the upload key that signs this app for Google Play, using openssl
-# only — no JDK required.
+# Creates the ONE upload key that signs all three games for Google Play, using
+# openssl only — no JDK required.
+#
+# Run this once. The same key is then reused for every game: the four signing
+# secrets are identical across the three repos, and only the AdMob ids differ.
 #
 # Run it in Git Bash:   bash store/make-upload-key.sh
 #
@@ -18,11 +21,24 @@ COUNTRY="${CERT_COUNTRY:-CY}"
 
 command -v openssl >/dev/null || { echo "openssl not found. Run this in Git Bash."; exit 1; }
 
+# One key for all three games, so an existing keystore is the normal case on
+# the second and third repo — reuse it rather than making another.
 if [ -e "$OUT_DIR/upload-keystore.p12" ]; then
-  echo "!! $OUT_DIR/upload-keystore.p12 already exists."
-  echo "   Do NOT overwrite it if you have already published with it — you would"
-  echo "   lose the ability to update that Play listing. Move it aside first."
-  exit 1
+  echo "You already have an upload key at $OUT_DIR/upload-keystore.p12"
+  echo "Reusing it — the same key signs all three games."
+  echo
+  if [ ! -e "$OUT_DIR/upload-keystore.b64" ]; then
+    base64 -w 0 "$OUT_DIR/upload-keystore.p12" > "$OUT_DIR/upload-keystore.b64"
+    echo "(regenerated the base64)"
+  fi
+  echo "  base64 : $OUT_DIR/upload-keystore.b64"
+  echo "  alias  : $ALIAS"
+  echo
+  echo "Push it to all three repos with:  bash store/push-secrets.sh"
+  echo
+  echo "If you really want a NEW key — which would orphan anything already"
+  echo "published with the old one — move the existing files aside first."
+  exit 0
 fi
 
 mkdir -p "$OUT_DIR"

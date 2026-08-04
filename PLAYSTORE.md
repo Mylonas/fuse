@@ -74,17 +74,35 @@ sideloading, **rejected by Play**.
 You have `openssl` (it ships with Git for Windows) but no JDK, so this path makes
 the keystore with openssl and lets GitHub Actions do the signing.
 
-**1. Create the upload key.** In **Git Bash**, from the repo folder:
+**One upload key signs all three games.** Do step 1 once, not once per game. The
+four signing secrets are then identical in all three repos; only the AdMob ids
+differ, because each game is its own app in AdMob.
+
+| Secret | Shared across the three games? |
+| --- | --- |
+| `KEYSTORE_BASE64` | shared |
+| `KEYSTORE_PASSWORD` | shared |
+| `KEY_ALIAS` | shared (`upload`) |
+| `KEY_PASSWORD` | shared |
+| `ADMOB_APP_ID` | **per game** |
+| `ADMOB_INTERSTITIAL_ID` | **per game** |
+
+Using one upload key for several apps is normal for a solo developer. Under Play
+App Signing this key only authorises *uploads* — Google holds the actual app
+signing key for each listing.
+
+**1. Create the upload key** (once). In **Git Bash**, from any of the repos:
 
 ```bash
 bash store/make-upload-key.sh
 ```
 
-It asks you to choose a password, twice. Type it straight into openssl — the
+It asks you to choose a password, twice. Type it into openssl's own prompt — the
 script never stores it, never takes it as an argument (which would put it in your
-shell history), and never prints it. Output lands in `~/play-upload-key/`.
+shell history), and never prints it. Output lands in `~/play-upload-key/`. Run it
+again later and it simply reuses the key it already made.
 
-If you would rather run the commands yourself, they are:
+If you would rather run the commands yourself:
 
 ```bash
 MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:2048 -sha256 -days 10000 -noenc -keyout tmp.key -out tmp.crt -subj "/CN=Mylonas/O=Mylonas/C=CY"
@@ -103,9 +121,9 @@ rm -f tmp.key tmp.crt && base64 -w 0 upload-keystore.p12 > upload-keystore.b64
 > *"subject name is expected to be in the format /type0=value0..."*.
 
 > **Back `upload-keystore.p12` up somewhere that is not this laptop.** Lose it and
-> you cannot ship updates to the same Play listing. (An *upload* key can be reset
-> by Google if it comes to that, unlike the app signing key — but that is a
-> support round-trip you do not want.)
+> you cannot update any of the three listings. (An *upload* key can be reset by
+> Google if it comes to that, unlike the app signing key — but that is a support
+> round-trip you do not want, times three.)
 
 Check what you made — it will ask for the password:
 
@@ -113,38 +131,43 @@ Check what you made — it will ask for the password:
 openssl pkcs12 -in ~/play-upload-key/upload-keystore.p12 -nokeys -info
 ```
 
-You should see `friendlyName: upload` and `subject=CN=Mylonas, O=Mylonas, C=CY`.
+You want to see `friendlyName: upload`.
 
-**2. Add six repository secrets** — GitHub → this repo → **Settings → Secrets and
-variables → Actions → New repository secret**:
+**2. Push the secrets to all three repos:**
 
-| Secret | Value |
-| --- | --- |
-| `KEYSTORE_BASE64` | the entire contents of `upload-keystore.b64` (one long line) |
-| `KEYSTORE_PASSWORD` | the password you chose |
-| `KEY_ALIAS` | `upload` |
-| `KEY_PASSWORD` | the same password |
-| `ADMOB_APP_ID` | `ca-app-pub-XXXX~YYYY` |
-| `ADMOB_INTERSTITIAL_ID` | `ca-app-pub-XXXX/ZZZZ` |
+```bash
+bash store/push-secrets.sh
+```
 
-To get the base64 onto your clipboard without opening it:
+It asks for the keystore password once (typed with echo off, never written to
+disk or your shell history) and for each game's two AdMob ids, then sets all six
+secrets on all three repos with `gh`. Verify with `gh secret list --repo Mylonas/<repo>`.
+
+To do it by hand instead: GitHub → each repo → **Settings → Secrets and variables
+→ Actions → New repository secret**, six per repo, per the table above. Get the
+base64 onto the clipboard with:
 
 ```bash
 clip < ~/play-upload-key/upload-keystore.b64
 ```
 
-Paste them into GitHub yourself. They are never visible to anyone else, and
-GitHub masks secret values in workflow logs.
-
 **3. Run the workflow.** Actions → **Signed release bundle** → *Run workflow*,
 with a `versionCode` higher than anything already uploaded (start at `2`) and a
-`versionName` like `1.1`.
+`versionName` like `1.1`. Or from the command line:
+
+```bash
+gh workflow run release.yml --repo Mylonas/chroma-core -f versionCode=2 -f versionName=1.1
+```
 
 It refuses to produce anything unusable: the build fails if the signing key is
 missing, fails if the AdMob ids are still the test ones, and runs `apksigner` at
 the end to prove the output is not debug-signed. Download the artifact — the
 `.aab` inside is what you upload to Play. Keep `mapping.txt` from the same
 artifact and upload it too, so Play can deobfuscate crash reports.
+
+Because the three games share an upload key, each still gets its **own** Play
+listing, its own package name and its own AdMob app. The shared key only means
+you manage one secret instead of three.
 
 ### Which option to pick
 
