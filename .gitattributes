@@ -1,0 +1,6 @@
+# Shell scripts must keep LF endings: Git Bash cannot run a script whose
+# shebang ends in CR ("bad interpreter: /usr/bin/env bash^M").
+*.sh text eol=lf
+
+# Gradle wrapper script, same reason.
+gradlew text eol=lf
