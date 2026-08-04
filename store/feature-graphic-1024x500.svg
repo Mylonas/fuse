@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <rect width="1024" height="500" fill="#080A14"/>
+  <g transform="translate(120 -6) scale(0.99)">
+    <g transform="scale(0.98)">  <circle cx="256" cy="330" r="112" fill="#FFD84D"/>
+  <circle cx="222" cy="296" r="30" fill="#FFFFFF" opacity="0.55"/>
+  <circle cx="176" cy="140" r="56" fill="#6EE7FF"/>
+  <circle cx="336" cy="140" r="56" fill="#7CF6C0"/></g>
+  </g>
+  <text x="640" y="250" font-family="Arial Black, Arial, sans-serif" font-size="86" font-weight="900"
+        fill="#FFFFFF" dominant-baseline="middle">FUSE</text>
+</svg>

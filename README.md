@@ -5,8 +5,8 @@ one — and a fusion can set off the ones underneath it. That cascade is the gam
 The well fills, the line at the top is always waiting, and every run ends with an
 obvious better move you should have made.
 
-Pure Kotlin on a `SurfaceView` canvas, procedurally synthesised audio, no
-third-party runtime dependencies.
+Pure Kotlin on a `SurfaceView` canvas, procedurally synthesised audio. The
+only third-party code is the AdMob SDK; the game itself has no dependencies.
 
 ## How it plays
 
@@ -129,6 +129,22 @@ No balance changes came out of this pass.
 ```bash
 gradle testDebugUnitTest
 ```
+
+## Ads and shipping
+
+Interstitials on game over via the AdMob GMA Next-Gen SDK, plus the UMP consent
+SDK for EEA users. Frequency capped so it does not wreck a one-more-go game:
+nothing for the first three runs, then at most one per three runs and never
+within 90 seconds of the last. Every SDK call is wrapped, so no ad failure or
+missing Play Services can affect the game — verified by a CI emulator run on an
+image with no Play Services at all.
+
+Ad unit IDs come from Gradle properties and default to Google's official test
+IDs, so nothing real is in git, and debug builds are pinned to test IDs because
+serving yourself live ads gets AdMob accounts suspended.
+
+**[PLAYSTORE.md](PLAYSTORE.md)** is the step-by-step release guide;
+**[PRIVACY.md](PRIVACY.md)** is the privacy policy template Play requires.
 
 ## Building
 
