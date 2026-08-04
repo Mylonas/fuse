@@ -1,3 +1,4 @@
+import java.io.File
 import java.util.Properties
 
 plugins {
@@ -23,8 +24,10 @@ val storePass = secretProp("KEYSTORE_PASSWORD") ?: keystoreProps.getProperty("st
 val keyAliasName = secretProp("KEY_ALIAS") ?: keystoreProps.getProperty("keyAlias")
 val keyPass = secretProp("KEY_PASSWORD") ?: keystoreProps.getProperty("keyPassword")
 
-val resolvedKeystore: java.io.File? = storeFilePath?.let {
-    val f = java.io.File(it)
+val resolvedKeystore: File? = storeFilePath?.let {
+    // NB: in the Gradle Kotlin DSL `java` is the JavaPluginExtension accessor,
+    // so java.io.File has to be imported rather than fully qualified here.
+    val f = File(it)
     if (f.isAbsolute) f else rootProject.file(it)
 }
 val canSignRelease = resolvedKeystore?.exists() == true &&
