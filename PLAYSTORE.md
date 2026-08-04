@@ -97,10 +97,17 @@ signing key for each listing.
 bash store/make-upload-key.sh
 ```
 
-It asks you to choose a password, twice. Type it into openssl's own prompt — the
-script never stores it, never takes it as an argument (which would put it in your
-shell history), and never prints it. Output lands in `~/play-upload-key/`. Run it
-again later and it simply reuses the key it already made.
+It asks you to choose a password, twice. Nothing appears as you type; press Enter
+after each. The password is read by bash and handed to openssl through an
+environment variable, so it never reaches disk, your shell history, or the
+process list. Output lands in `~/play-upload-key/`. Run it again later and it
+simply reuses the key it already made.
+
+> Bash does the prompting rather than openssl on purpose. openssl asks the
+> *Windows console* for a hidden password, and Git Bash (MinTTY) is not a Windows
+> console — openssl's prompt never appears and it blocks forever on a blank line.
+> If you run the raw commands below instead, wrap them in `winpty` or supply the
+> password with `-passout env:VAR`.
 
 If you would rather run the commands yourself:
 
@@ -109,7 +116,7 @@ MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:2048 -sha256 -days 10000 -noenc
 ```
 
 ```bash
-openssl pkcs12 -export -inkey tmp.key -in tmp.crt -name upload -out upload-keystore.p12
+read -rs PW; export KS_PW="$PW"; openssl pkcs12 -export -inkey tmp.key -in tmp.crt -name upload -out upload-keystore.p12 -passout env:KS_PW; unset KS_PW PW
 ```
 
 ```bash
@@ -128,8 +135,10 @@ rm -f tmp.key tmp.crt && base64 -w 0 upload-keystore.p12 > upload-keystore.b64
 Check what you made — it will ask for the password:
 
 ```bash
-openssl pkcs12 -in ~/play-upload-key/upload-keystore.p12 -nokeys -info
+openssl pkcs12 -in ~/play-upload-key/upload-keystore.p12 -nokeys -info -passin stdin
 ```
+
+Type the password, press Enter, then Ctrl-D.
 
 You want to see `friendlyName: upload`.
 
