@@ -114,6 +114,14 @@ fi
 grep -iE "$PKG.*(error|failed)" "$OUT/logcat.txt" | head -10 || true
 
 echo
+echo "== AdMob =="
+grep -iE "Ads|admob|Interstitial" "$OUT/logcat.txt" | grep -viE "^$" | head -25 | tee "$OUT/ads.txt"
+if grep -q "Missing application ID" "$OUT/logcat.txt"; then
+  echo "ADMOB APP ID MISSING - this crashes on launch"
+  FAIL=1
+fi
+
+echo
 echo "== baseline: identical loop, background only =="
 # Attributes the frame time: if clearing the screen alone costs the same as a
 # full frame, the cost is the rasterizer, not the game's drawing.
