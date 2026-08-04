@@ -51,6 +51,11 @@ class GameView(
         sfx.stop()
     }
 
+    /** The callback runs on the render thread, so hop to the main thread. */
+    fun setOnRunEnded(cb: () -> Unit) {
+        game.onRunEnded = { post(cb) }
+    }
+
     fun onPauseGame() {
         paused = true
     }
