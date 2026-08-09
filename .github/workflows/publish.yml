@@ -11,6 +11,12 @@ name: Publish to Play
 # changes can take hours to propagate; a fresh key returning 403 usually means
 # "wait", not "misconfigured".
 #
+# A brand-new app is a "draft app" until its first release is rolled out from the
+# Play Console. Until then the API accepts an internal-track release outright but
+# rejects a closed-track one unless it is created with status "draft" — the error
+# is "Only releases with status draft may be created on draft app". Upload with
+# status: draft, then press Rollout in the Console once.
+#
 # PRODUCTION IS DELIBERATELY NOT AN OPTION HERE. Internal and closed tracks only
 # reach people you invited and can be replaced freely; a production rollout is
 # public and cannot meaningfully be recalled. Add "production" to the choice
@@ -35,6 +41,13 @@ on:
           - alpha
           - beta
         default: internal
+      status:
+        description: "Release status — an app that has never been published only accepts 'draft'"
+        type: choice
+        options:
+          - completed
+          - draft
+        default: completed
 
 jobs:
   publish:
@@ -134,7 +147,7 @@ jobs:
           packageName: com.mikmy.fuse
           releaseFiles: app/build/outputs/bundle/release/*.aab
           track: ${{ inputs.track }}
-          status: completed
+          status: ${{ inputs.status }}
           mappingFile: app/build/outputs/mapping/release/mapping.txt
           whatsNewDirectory: ${{ steps.whatsnew.outputs.dir }}
 
@@ -149,6 +162,7 @@ jobs:
             echo "| track | ${{ inputs.track }} |"
             echo "| versionCode | ${{ inputs.versionCode }} |"
             echo "| versionName | ${{ inputs.versionName }} |"
+            echo "| status | ${{ inputs.status }} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Keep a copy of the bundle
