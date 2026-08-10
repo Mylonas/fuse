@@ -1,0 +1,3 @@
+# Local asset-tooling installs — assets themselves are committed, deps are not.
+node_modules/
+package-lock.json
