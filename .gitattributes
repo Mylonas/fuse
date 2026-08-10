@@ -4,3 +4,8 @@
 
 # Gradle wrapper script, same reason.
 gradlew text eol=lf
+
+# Store PNGs are binary; never normalise line endings.
+*.png binary
+# Node ESM asset scripts need LF shebangs.
+*.mjs text eol=lf
