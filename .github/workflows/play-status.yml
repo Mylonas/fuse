@@ -1,0 +1,56 @@
+name: Play status
+
+# Read-only. Asks the Google Play Developer API what state this app's tracks are
+# in, using the same service-account secret the publish workflow uses. It opens
+# an edit, reads the track releases, and DELETES the edit without committing, so
+# it changes nothing on Play.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Play
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          PACKAGE: com.mikmy.fuse
+        run: |
+          python3 -m pip install --quiet google-auth requests
+          python3 - <<'PY'
+          import json, os, sys, requests
+          from google.oauth2 import service_account
+          from google.auth.transport.requests import Request
+
+          pkg = os.environ["PACKAGE"]
+          info = json.loads(os.environ["PLAY_SERVICE_ACCOUNT_JSON"])
+          creds = service_account.Credentials.from_service_account_info(
+              info, scopes=["https://www.googleapis.com/auth/androidpublisher"])
+          creds.refresh(Request())
+          h = {"Authorization": f"Bearer {creds.token}"}
+          base = f"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{pkg}"
+
+          print(f"service account: {info.get('client_email')}")
+          print(f"package: {pkg}\n")
+
+          r = requests.post(f"{base}/edits", headers=h)
+          if r.status_code != 200:
+              print(f"::error::edits.insert {r.status_code}: {r.text}"); sys.exit(1)
+          edit = r.json()["id"]
+          try:
+              t = requests.get(f"{base}/edits/{edit}/tracks", headers=h).json()
+              tracks = t.get("tracks", [])
+              if not tracks:
+                  print("no tracks returned")
+              for tr in tracks:
+                  print(f"== track: {tr['track']} ==")
+                  for rel in tr.get("releases", []):
+                      print(f"  name={rel.get('name')!r} status={rel.get('status')} "
+                            f"versionCodes={rel.get('versionCodes')} "
+                            f"userFraction={rel.get('userFraction')}")
+                  print()
+          finally:
+              requests.delete(f"{base}/edits/{edit}", headers=h)
+          print("edit discarded — nothing changed on Play")
+          PY
