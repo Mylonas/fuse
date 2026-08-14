@@ -55,9 +55,10 @@ jobs:
           script: bash .github/scripts/play.sh com.mikmy.fuse
 
       - name: Upload screenshots and logs
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: fuse-emulator
           path: artifacts/**
           if-no-files-found: warn
+          retention-days: 7
