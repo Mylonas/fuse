@@ -47,7 +47,7 @@ jobs:
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 3
 
       - name: Upload reports
         if: always()
@@ -58,4 +58,4 @@ jobs:
             app/build/reports/**
             app/build/outputs/lint-results-release.*
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 3
