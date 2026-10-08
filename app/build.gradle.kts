@@ -63,12 +63,12 @@ if (project.hasProperty("requireRelease")) {
 
 android {
     namespace = "com.mikmy.fuse"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.mikmy.fuse"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         // Play needs a higher versionCode on every upload; CI passes it in.
         versionCode = secretProp("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = secretProp("VERSION_NAME") ?: "1.0.0"
