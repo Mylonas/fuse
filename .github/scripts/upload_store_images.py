@@ -51,6 +51,18 @@ if r.status_code != 200:
 edit_id = r.json()["id"]
 print(f"opened edit {edit_id}")
 
+lr = requests.get(f"{BASE}/edits/{edit_id}/listings", headers=H)
+if lr.status_code == 200:
+    listings = lr.json().get("listings", [])
+    if listings:
+        print("existing listings on Play for this app:")
+        for l in listings:
+            print(f"  language={l.get('language')!r} title={l.get('title')!r}")
+    else:
+        print("existing listings on Play for this app: none at all")
+else:
+    print(f"  (listings.list: {lr.status_code} {lr.text})")
+
 
 def upload_image(image_type, path):
     with open(path, "rb") as f:
