@@ -394,6 +394,29 @@ class Game(ctx: Context, private val sfx: Sfx) {
                 p.color = withAlpha(Color.WHITE, (90 + 90 * sin(clock * 4f + b.tier)).toInt())
                 c.drawCircle(cx, cy, r * 1.08f, p)
             }
+
+            if (phase == Phase.OVER) {
+                val fade = min(1f, overTimer * 3f)
+                val alpha = (fade * 220).toInt()
+                val eyeR = r * 0.12f
+                val eyeOff = r * 0.22f
+                val eyeY = cy - r * 0.15f
+                p.style = Paint.Style.FILL
+                p.color = withAlpha(0xFF000000.toInt(), alpha)
+                c.drawCircle(cx - eyeOff, eyeY, eyeR, p)
+                c.drawCircle(cx + eyeOff, eyeY, eyeR, p)
+                p.style = Paint.Style.STROKE
+                p.strokeWidth = r * 0.09f
+                p.strokeCap = Paint.Cap.ROUND
+                val smileR = r * 0.30f
+                val smileY = cy + r * 0.10f
+                c.drawArc(
+                    cx - smileR, smileY - smileR,
+                    cx + smileR, smileY + smileR,
+                    20f, 140f, false, p
+                )
+                p.strokeCap = Paint.Cap.BUTT
+            }
         }
     }
 
