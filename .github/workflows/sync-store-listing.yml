@@ -1,9 +1,10 @@
-name: Upload store assets
+name: Sync store listing
 
 # One-off automation: captures the game running on an emulator, grabs a
-# handful of screenshots, and pushes them plus the committed feature graphic
-# straight to the Play Developer API listing images. No Play Console UI, no
-# browser — everything runs on the GitHub-hosted runner.
+# handful of screenshots, and pushes the listing text (title/descriptions)
+# plus the icon, feature graphic and screenshots straight to the Play
+# Developer API. No Play Console UI, no browser — everything runs on the
+# GitHub-hosted runner.
 #
 # Needs PLAY_SERVICE_ACCOUNT_JSON (same secret publish.yml / play-status.yml
 # use), and that service account needs "Manage store presence" permission in
@@ -21,7 +22,7 @@ on:
         default: "4"
 
 jobs:
-  upload:
+  sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,12 +60,28 @@ jobs:
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -no-boot-anim -camera-back none
           script: bash .github/scripts/play.sh com.mikmy.fuse
 
-      - name: Upload images to Play listing
+      - name: Sync listing text and images to Play
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           PACKAGE: com.mikmy.fuse
           LANGUAGE: ${{ inputs.language }}
           SCREENSHOT_COUNT: ${{ inputs.screenshotCount }}
+          TITLE: "Fuse"
+          SHORT_DESCRIPTION: "Drop orbs. Two of a kind fuse. Don't overflow the well."
+          FULL_DESCRIPTION: |
+            Drop orbs into a well. Two of the same tier that touch fuse into the next one up - and a fusion can set off the ones underneath it, chaining into something much bigger than you dropped.
+
+            The well keeps filling. The line at the top is always waiting. And every run ends with an obvious better move you should have made - which is exactly why you'll want to go again.
+
+            One control: drag to aim the dropper, release to drop.
+
+            Only the smallest five tiers are ever dealt, so every big orb you see is something you actually built through chains, not luck. Scoring rewards the chain, not just the size - a long cascade beats one lucky fusion every time.
+
+            Fuse is pure Kotlin on a canvas with procedurally synthesised sound - no game engine, no audio assets, nothing bloating the download. Loads fast, plays in short bursts or long ones.
+
+            Free to play, supported by occasional interstitial ads between runs - never mid-drop, and capped so they stay out of your way. No account, no login required.
+
+            How big a chain can you build before the well overflows?
         run: |
           python3 -m pip install --quiet google-auth requests
-          python3 .github/scripts/upload_store_images.py
+          python3 .github/scripts/sync_store_listing.py
