@@ -2,8 +2,6 @@
 
 _Last updated: 04 August 2026_
 
-**Fill in the contact email at the bottom and host this publicly before you
-submit to Google Play. A privacy policy URL is required.**
 
 ## The short version
 
@@ -61,4 +59,4 @@ new date at the top.
 
 ## Contact
 
-Questions about this policy: **<your-email-here>**
+Questions about this policy: **mikmylona@gmail.com**

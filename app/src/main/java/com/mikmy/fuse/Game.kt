@@ -39,6 +39,9 @@ class Game(ctx: Context, private val sfx: Sfx) {
     private enum class Phase { TITLE, PLAY, OVER }
 
     private var phase = Phase.TITLE
+
+    /** True while the title screen is showing. */
+    val onTitle: Boolean get() = phase == Phase.TITLE
     private var well: Well? = null
 
     private var w = 1f
