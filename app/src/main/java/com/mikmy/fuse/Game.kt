@@ -419,6 +419,7 @@ class Game(ctx: Context, private val sfx: Sfx) {
                     20f, 140f, false, p
                 )
                 p.strokeCap = Paint.Cap.BUTT
+                p.style = Paint.Style.FILL   // leave the shared paint as the next ball expects it
             }
         }
     }
