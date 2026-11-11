@@ -3,14 +3,27 @@ package com.mikmy.fuse
 import android.app.Activity
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.widget.FrameLayout
+import android.widget.TextView
 
 class MainActivity : Activity() {
 
     private lateinit var view: GameView
     private lateinit var ads: Ads
+    private lateinit var privacyButton: TextView
+
+    /** Shows the privacy button on the title screen, and only where consent applies. */
+    private val privacyPoll = object : Runnable {
+        override fun run() {
+            privacyButton.visibility =
+                if (view.isOnTitle() && ads.privacyOptionsRequired()) View.VISIBLE else View.GONE
+            privacyButton.postDelayed(this, 400)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,7 +34,26 @@ class MainActivity : Activity() {
         ads = Ads(this)
         ads.start()
         view.setOnRunEnded { ads.onRunEnded() }
-        setContentView(view)
+        val root = FrameLayout(this)
+        root.addView(view)
+        privacyButton = TextView(this).apply {
+            text = "Privacy choices"
+            setTextColor(0xB3FFFFFF.toInt())
+            textSize = 13f
+            val pad = (14 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad, pad, pad)
+            visibility = View.GONE
+            setOnClickListener { ads.showPrivacyOptions() }
+        }
+        root.addView(
+            privacyButton,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM or Gravity.START,
+            ),
+        )
+        setContentView(root)
         goFullscreen()
     }
 
@@ -33,9 +65,11 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         view.onResumeGame()
+        privacyButton.post(privacyPoll)
     }
 
     override fun onPause() {
+        privacyButton.removeCallbacks(privacyPoll)
         view.onPauseGame()
         super.onPause()
     }
