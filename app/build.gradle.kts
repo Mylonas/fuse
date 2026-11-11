@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
 }
 
 // Release signing comes from either a local keystore.properties (storeFile /
@@ -134,15 +133,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 }
 
 dependencies {
     // AdMob. The GMA Next-Gen SDK — Google put the classic play-services-ads
     // into maintenance mode in January 2026 and recommends this for new apps.
-    implementation("com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.3.1")
+    implementation("com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0")
     // Consent for EEA/UK users. Required by Google's EU user consent policy.
     implementation("com.google.android.ump:user-messaging-platform:4.0.0")
 
